@@ -1,0 +1,115 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Define the structure for Employee
+struct Employee {
+    int emp_id;
+    char emp_name[50];
+    float emp_salary;
+};
+
+// Function to add an employee record to the file
+void addEmployee(FILE *fp) {
+    struct Employee emp;
+    printf("Enter Employee ID: ");
+    scanf("%d", &emp.emp_id);
+    printf("Enter Employee Name: ");
+    getchar(); // Clear newline character from buffer
+    fgets(emp.emp_name, sizeof(emp.emp_name), stdin);
+    emp.emp_name[strcspn(emp.emp_name, "\n")] = '\0'; // Remove newline from fgets input
+    printf("Enter Employee Salary: ");
+    scanf("%f", &emp.emp_salary);
+
+    fseek(fp, 0, SEEK_END); // Move file pointer to the end
+    fwrite(&emp, sizeof(struct Employee), 1, fp);
+    printf("Employee added successfully.\n");
+}
+
+// Function to display all employee records from the file
+void displayEmployees(FILE *fp) {
+    struct Employee emp;
+    rewind(fp); // Move file pointer to the beginning
+
+    printf("\nEmployee Details:\n");
+    printf("ID\tName\t\tSalary\n");
+    printf("------------------------------------------\n");
+
+    while (fread(&emp, sizeof(struct Employee), 1, fp) == 1) {
+        printf("%d\t%s\t%.2f\n", emp.emp_id, emp.emp_name, emp.emp_salary);
+    }
+}
+
+// Function to update an employee record based on ID
+void updateEmployee(FILE *fp) {
+    int id;
+    struct Employee emp;
+    printf("Enter Employee ID to update: ");
+    scanf("%d", &id);
+
+    fseek(fp, (id - 1) * sizeof(struct Employee), SEEK_SET); // Move pointer to the desired record
+
+    if (fread(&emp, sizeof(struct Employee), 1, fp) == 1) {
+        printf("Current Details:\n");
+        printf("ID: %d, Name: %s, Salary: %.2f\n", emp.emp_id, emp.emp_name, emp.emp_salary);
+
+        printf("Enter new Employee Name: ");
+        getchar(); // Clear newline character from buffer
+        fgets(emp.emp_name, sizeof(emp.emp_name), stdin);
+        emp.emp_name[strcspn(emp.emp_name, "\n")] = '\0'; // Remove newline from fgets input
+        printf("Enter new Employee Salary: ");
+        scanf("%f", &emp.emp_salary);
+
+        fseek(fp, -sizeof(struct Employee), SEEK_CUR); // Move pointer back to update the record
+        fwrite(&emp, sizeof(struct Employee), 1, fp);
+        printf("Employee details updated successfully.\n");
+    } else {
+        printf("Employee with ID %d not found.\n", id);
+    }
+}
+
+int main() {
+    FILE *fp;
+    int choice;
+
+    fp = fopen("employees.dat", "rb+"); // Open file for reading and writing in binary mode
+
+    if (fp == NULL) {
+        fp = fopen("employees.dat", "wb+"); // If file doesn't exist, create it
+        if (fp == NULL) {
+            printf("Error in creating/opening file.\n");
+            return 1;
+        }
+    }
+
+    while (1) {
+        printf("\nEmployee Management System\n");
+        printf("1. Add Employee\n");
+        printf("2. Display Employees\n");
+        printf("3. Update Employee\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                addEmployee(fp);
+                break;
+            case 2:
+                displayEmployees(fp);
+                break;
+            case 3:
+                updateEmployee(fp);
+                break;
+            case 4:
+                fclose(fp);
+                printf("Exiting program.\n");
+                exit(0);
+            default:
+                printf("Invalid choice. Please enter a valid option.\n");
+                break;
+        }
+    }
+
+    return 0;
+}

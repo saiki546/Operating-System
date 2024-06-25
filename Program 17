@@ -1,0 +1,142 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_PROCESSES 10
+#define MAX_RESOURCES 10
+
+int available[MAX_RESOURCES];
+int max[MAX_PROCESSES][MAX_RESOURCES];
+int allocation[MAX_PROCESSES][MAX_RESOURCES];
+int need[MAX_PROCESSES][MAX_RESOURCES];
+bool finished[MAX_PROCESSES];
+
+int num_processes, num_resources;
+
+void initialize() {
+    // Input number of processes and resources
+    printf("Enter number of processes: ");
+    scanf("%d", &num_processes);
+
+    printf("Enter number of resources: ");
+    scanf("%d", &num_resources);
+
+    // Input available resources
+    printf("Enter available resources: ");
+    for (int i = 0; i < num_resources; ++i) {
+        scanf("%d", &available[i]);
+    }
+
+    // Input maximum resources needed by each process
+    printf("Enter maximum resources for each process:\n");
+    for (int i = 0; i < num_processes; ++i) {
+        printf("Process %d: ", i);
+        for (int j = 0; j < num_resources; ++j) {
+            scanf("%d", &max[i][j]);
+        }
+    }
+
+    // Initialize allocation and need matrices
+    for (int i = 0; i < num_processes; ++i) {
+        for (int j = 0; j < num_resources; ++j) {
+            allocation[i][j] = 0;
+            need[i][j] = max[i][j];
+        }
+        finished[i] = false;
+    }
+}
+
+bool is_safe(int process, int request[]) {
+    // Check if the process's request can be granted
+    for (int i = 0; i < num_resources; ++i) {
+        if (request[i] > need[process][i] || request[i] > available[i]) {
+            return false;
+        }
+    }
+
+    // Try to allocate resources temporarily
+    for (int i = 0; i < num_resources; ++i) {
+        available[i] -= request[i];
+        allocation[process][i] += request[i];
+        need[process][i] -= request[i];
+    }
+
+    // Check if system is still in safe state
+    bool safe = true;
+    for (int i = 0; i < num_processes; ++i) {
+        if (!finished[i]) {
+            bool can_run = true;
+            for (int j = 0; j < num_resources; ++j) {
+                if (need[i][j] > available[j]) {
+                    can_run = false;
+                    break;
+                }
+            }
+            if (can_run) {
+                safe = true;
+                break;
+            } else {
+                safe = false;
+            }
+        }
+    }
+
+    // Undo allocation if system is not safe
+    if (!safe) {
+        for (int i = 0; i < num_resources; ++i) {
+            available[i] += request[i];
+            allocation[process][i] -= request[i];
+            need[process][i] += request[i];
+        }
+    }
+
+    return safe;
+}
+
+void request_resources(int process) {
+    int request[MAX_RESOURCES];
+
+    printf("Enter resource request for process %d: ", process);
+    for (int i = 0; i < num_resources; ++i) {
+        scanf("%d", &request[i]);
+    }
+
+    if (is_safe(process, request)) {
+        printf("Request granted. System is still in safe state.\n");
+    } else {
+        printf("Request denied. System will not be in safe state.\n");
+    }
+}
+
+int main() {
+    initialize();
+
+    int choice, process;
+
+    while (1) {
+        printf("\nBanker's Algorithm - Deadlock Avoidance\n");
+        printf("1. Request Resources\n");
+        printf("2. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter process number (0 to %d): ", num_processes - 1);
+                scanf("%d", &process);
+                if (process >= 0 && process < num_processes) {
+                    request_resources(process);
+                } else {
+                    printf("Invalid process number.\n");
+                }
+                break;
+            case 2:
+                printf("Exiting program.\n");
+                return 0;
+            default:
+                printf("Invalid choice. Please enter a valid option.\n");
+                break;
+        }
+    }
+
+    return 0;
+}

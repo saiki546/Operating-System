@@ -1,0 +1,72 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MEMORY_SIZE 1000
+
+struct block {
+    size_t size;
+    int free; // 1 if free, 0 if allocated
+    struct block *next;
+};
+
+typedef struct block Block;
+
+void initialize_memory();
+void print_memory();
+void *first_fit_alloc(size_t size);
+void *best_fit_alloc(size_t size);
+void *worst_fit_alloc(size_t size);
+void dealloc(void *ptr);
+
+static char memory[MEMORY_SIZE];
+static Block *free_list;
+
+int main() {
+    initialize_memory();
+
+    // Allocate memory using different strategies
+    void *ptr1 = first_fit_alloc(100);
+    void *ptr2 = best_fit_alloc(200);
+    void *ptr3 = worst_fit_alloc(300);
+
+    // Print memory after allocation
+    printf("Memory after allocation:\n");
+    print_memory();
+
+    // Deallocate memory
+    dealloc(ptr1);
+    dealloc(ptr2);
+    dealloc(ptr3);
+
+    // Print memory after deallocation
+    printf("\nMemory after deallocation:\n");
+    print_memory();
+
+    return 0;
+}
+
+void initialize_memory() {
+    free_list = (Block *) memory;
+    free_list->size = MEMORY_SIZE - sizeof(Block);
+    free_list->free = 1;
+    free_list->next = NULL;
+}
+
+void print_memory() {
+    Block *current = free_list;
+    while (current) {
+        printf("Block: size = %zu, free = %d\n", current->size, current->free);
+        current = current->next;
+    }
+}
+
+void *first_fit_alloc(size_t size) {
+    Block *current = free_list;
+    while (current) {
+        if (current->free && current->size >= size) {
+            if (current->size > size + sizeof(Block)) {
+                Block *new_block = (Block *)((char *)current + sizeof(Block) + size);
+                new_block->size = current->size - size - sizeof(Block);
+                new_block->free = 1;
+                new_block->next = current->next;
+                current->next = new_block

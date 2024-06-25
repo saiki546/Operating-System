@@ -1,0 +1,109 @@
+#include <stdio.h>
+#include <limits.h>
+
+#define MAX_PROCESSES 100
+
+struct Process {
+    int pid;            // Process ID
+    int arrivalTime;    // Arrival time
+    int burstTime;      // Burst time
+    int remainingTime;  // Remaining time
+    int priority;       // Priority (lower value means higher priority)
+    int waitingTime;    // Waiting time
+    int turnaroundTime; // Turnaround time
+    int completed;      // Completion status
+};
+
+// Function to find the next process to execute
+int findNextProcess(struct Process proc[], int n, int currentTime) {
+    int highestPriority = INT_MAX;
+    int nextProcess = -1;
+    for (int i = 0; i < n; i++) {
+        if (!proc[i].completed && proc[i].arrivalTime <= currentTime && proc[i].remainingTime > 0) {
+            if (proc[i].priority < highestPriority) {
+                highestPriority = proc[i].priority;
+                nextProcess = i;
+            }
+        }
+    }
+    return nextProcess;
+}
+
+// Function to calculate waiting time and turnaround time
+void calculateTimes(struct Process proc[], int n) {
+    int currentTime = 0;
+    int completedProcesses = 0;
+    int prevProcess = -1;
+
+    while (completedProcesses < n) {
+        int i = findNextProcess(proc, n, currentTime);
+        if (i == -1) {
+            currentTime++;
+            continue;
+        }
+
+        if (i != prevProcess) {
+            printf("Time %d: Process %d is executing\n", currentTime, proc[i].pid);
+            prevProcess = i;
+        }
+
+        proc[i].remainingTime--;
+        currentTime++;
+
+        if (proc[i].remainingTime == 0) {
+            proc[i].completed = 1;
+            completedProcesses++;
+            proc[i].turnaroundTime = currentTime - proc[i].arrivalTime;
+            proc[i].waitingTime = proc[i].turnaroundTime - proc[i].burstTime;
+        }
+    }
+}
+
+// Function to calculate average times
+void calculateAverageTimes(struct Process proc[], int n, float *avgWaitingTime, float *avgTurnaroundTime) {
+    int totalWaitingTime = 0, totalTurnaroundTime = 0;
+    for (int i = 0; i < n; i++) {
+        totalWaitingTime += proc[i].waitingTime;
+        totalTurnaroundTime += proc[i].turnaroundTime;
+    }
+    *avgWaitingTime = (float)totalWaitingTime / n;
+    *avgTurnaroundTime = (float)totalTurnaroundTime / n;
+}
+
+int main() {
+    int n;
+
+    // Input the number of processes
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    struct Process proc[MAX_PROCESSES];
+
+    // Input arrival time, burst time, and priority for each process
+    for (int i = 0; i < n; i++) {
+        proc[i].pid = i + 1;
+        proc[i].completed = 0;
+        printf("Enter arrival time, burst time, and priority for process %d: ", i + 1);
+        scanf("%d %d %d", &proc[i].arrivalTime, &proc[i].burstTime, &proc[i].priority);
+        proc[i].remainingTime = proc[i].burstTime;
+    }
+
+    // Calculate waiting time and turnaround time for each process
+    calculateTimes(proc, n);
+
+    // Calculate average waiting time and average turnaround time
+    float avgWaitingTime, avgTurnaroundTime;
+    calculateAverageTimes(proc, n, &avgWaitingTime, &avgTurnaroundTime);
+
+    // Output the process details
+    printf("\nProcess ID\tArrival Time\tBurst Time\tPriority\tWaiting Time\tTurnaround Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", proc[i].pid, proc[i].arrivalTime, proc[i].burstTime, proc[i].priority, proc[i].waitingTime, proc[i].turnaroundTime);
+    }
+
+    // Output the average times
+    printf("\nAverage Waiting Time: %.2f\n", avgWaitingTime);
+    printf("Average Turnaround Time: %.2f\n", avgTurnaroundTime);
+
+    return 0;
+}

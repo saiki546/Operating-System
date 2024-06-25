@@ -1,0 +1,86 @@
+#include <stdio.h>
+
+// Structure to represent a process
+struct Process {
+    int pid;        // Process ID
+    int arrivalTime; // Arrival time
+    int burstTime;  // Burst time
+    int waitingTime; // Waiting time
+    int turnaroundTime; // Turnaround time
+};
+
+// Function to sort processes by arrival time
+void sortByArrivalTime(struct Process proc[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (proc[j].arrivalTime > proc[j + 1].arrivalTime) {
+                struct Process temp = proc[j];
+                proc[j] = proc[j + 1];
+                proc[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Function to calculate waiting time and turnaround time
+void calculateTimes(struct Process proc[], int n) {
+    int currentTime = 0;
+    for (int i = 0; i < n; i++) {
+        if (currentTime < proc[i].arrivalTime) {
+            currentTime = proc[i].arrivalTime;
+        }
+        proc[i].waitingTime = currentTime - proc[i].arrivalTime;
+        proc[i].turnaroundTime = proc[i].waitingTime + proc[i].burstTime;
+        currentTime += proc[i].burstTime;
+    }
+}
+
+// Function to calculate average times
+void calculateAverageTimes(struct Process proc[], int n, float *avgWaitingTime, float *avgTurnaroundTime) {
+    int totalWaitingTime = 0, totalTurnaroundTime = 0;
+    for (int i = 0; i < n; i++) {
+        totalWaitingTime += proc[i].waitingTime;
+        totalTurnaroundTime += proc[i].turnaroundTime;
+    }
+    *avgWaitingTime = (float)totalWaitingTime / n;
+    *avgTurnaroundTime = (float)totalTurnaroundTime / n;
+}
+
+int main() {
+    int n;
+
+    // Input the number of processes
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    struct Process proc[n];
+
+    // Input arrival time and burst time for each process
+    for (int i = 0; i < n; i++) {
+        proc[i].pid = i + 1;
+        printf("Enter arrival time and burst time for process %d: ", i + 1);
+        scanf("%d %d", &proc[i].arrivalTime, &proc[i].burstTime);
+    }
+
+    // Sort processes by arrival time
+    sortByArrivalTime(proc, n);
+
+    // Calculate waiting time and turnaround time for each process
+    calculateTimes(proc, n);
+
+    // Calculate average waiting time and average turnaround time
+    float avgWaitingTime, avgTurnaroundTime;
+    calculateAverageTimes(proc, n, &avgWaitingTime, &avgTurnaroundTime);
+
+    // Output the process details
+    printf("\nProcess ID\tArrival Time\tBurst Time\tWaiting Time\tTurnaround Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\n", proc[i].pid, proc[i].arrivalTime, proc[i].burstTime, proc[i].waitingTime, proc[i].turnaroundTime);
+    }
+
+    // Output the average times
+    printf("\nAverage Waiting Time: %.2f\n", avgWaitingTime);
+    printf("Average Turnaround Time: %.2f\n", avgTurnaroundTime);
+
+    return 0;
+}

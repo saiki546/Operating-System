@@ -1,0 +1,81 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+int main() {
+    char main_dir_name[] = "main_directory";
+    char sub_dir1_name[] = "subdirectory1";
+    char sub_dir2_name[] = "subdirectory2";
+
+    // Create the main directory
+    int main_dir_status = mkdir(main_dir_name, 0777);
+    if (main_dir_status == -1) {
+        perror("Error creating main directory");
+        return 1;
+    }
+
+    // Create subdirectory1 inside main_directory
+    char sub_dir1_path[100];
+    sprintf(sub_dir1_path, "%s/%s", main_dir_name, sub_dir1_name);
+    int sub_dir1_status = mkdir(sub_dir1_path, 0777);
+    if (sub_dir1_status == -1) {
+        perror("Error creating subdirectory1");
+        return 1;
+    }
+
+    // Create subdirectory2 inside main_directory
+    char sub_dir2_path[100];
+    sprintf(sub_dir2_path, "%s/%s", main_dir_name, sub_dir2_name);
+    int sub_dir2_status = mkdir(sub_dir2_path, 0777);
+    if (sub_dir2_status == -1) {
+        perror("Error creating subdirectory2");
+        return 1;
+    }
+
+    // Create some sample files inside subdirectory1
+    char file1_path[100];
+    sprintf(file1_path, "%s/%s/%s", main_dir_name, sub_dir1_name, "file1.txt");
+    FILE *file1 = fopen(file1_path, "w");
+    if (file1 == NULL) {
+        perror("Error creating file1.txt");
+        return 1;
+    }
+    fprintf(file1, "This is file1.txt in subdirectory1\n");
+    fclose(file1);
+
+    char file2_path[100];
+    sprintf(file2_path, "%s/%s/%s", main_dir_name, sub_dir1_name, "file2.txt");
+    FILE *file2 = fopen(file2_path, "w");
+    if (file2 == NULL) {
+        perror("Error creating file2.txt");
+        return 1;
+    }
+    fprintf(file2, "This is file2.txt in subdirectory1\n");
+    fclose(file2);
+
+    // Create some sample files inside subdirectory2
+    char file3_path[100];
+    sprintf(file3_path, "%s/%s/%s", main_dir_name, sub_dir2_name, "file3.txt");
+    FILE *file3 = fopen(file3_path, "w");
+    if (file3 == NULL) {
+        perror("Error creating file3.txt");
+        return 1;
+    }
+    fprintf(file3, "This is file3.txt in subdirectory2\n");
+    fclose(file3);
+
+    char file4_path[100];
+    sprintf(file4_path, "%s/%s/%s", main_dir_name, sub_dir2_name, "file4.txt");
+    FILE *file4 = fopen(file4_path, "w");
+    if (file4 == NULL) {
+        perror("Error creating file4.txt");
+        return 1;
+    }
+    fprintf(file4, "This is file4.txt in subdirectory2\n");
+    fclose(file4);
+
+    printf("Directory structure created successfully.\n");
+
+    return 0;
+}

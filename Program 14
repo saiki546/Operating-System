@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_FILES 100
+#define MAX_FILENAME_LENGTH 50
+
+// Global variables
+char files[MAX_FILES][MAX_FILENAME_LENGTH];
+int num_files = 0;
+
+// Function to add a file
+void addFile(char filename[]) {
+    if (num_files < MAX_FILES) {
+        strcpy(files[num_files], filename);
+        num_files++;
+        printf("File '%s' added successfully.\n", filename);
+    } else {
+        printf("Cannot add more files. Maximum limit reached.\n");
+    }
+}
+
+// Function to list all files
+void listFiles() {
+    if (num_files == 0) {
+        printf("No files found.\n");
+    } else {
+        printf("List of files:\n");
+        for (int i = 0; i < num_files; ++i) {
+            printf("%d. %s\n", i + 1, files[i]);
+        }
+    }
+}
+
+// Function to delete a file
+void deleteFile(char filename[]) {
+    int found = 0;
+    for (int i = 0; i < num_files; ++i) {
+        if (strcmp(files[i], filename) == 0) {
+            found = 1;
+            // Remove file by shifting all subsequent files forward
+            for (int j = i; j < num_files - 1; ++j) {
+                strcpy(files[j], files[j + 1]);
+            }
+            num_files--;
+            printf("File '%s' deleted successfully.\n", filename);
+            break;
+        }
+    }
+    if (!found) {
+        printf("File '%s' not found.\n", filename);
+    }
+}
+
+int main() {
+    int choice;
+    char filename[MAX_FILENAME_LENGTH];
+
+    while (1) {
+        printf("\n1. Add a file\n");
+        printf("2. List all files\n");
+        printf("3. Delete a file\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter filename to add: ");
+                scanf("%s", filename);
+                addFile(filename);
+                break;
+            case 2:
+                listFiles();
+                break;

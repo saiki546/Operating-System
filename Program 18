@@ -1,0 +1,81 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 5
+#define MAX_ITEMS 20
+
+sem_t empty, full, mutex;
+int buffer[BUFFER_SIZE];
+int in = 0, out = 0;
+int produced_count = 0, consumed_count = 0;
+
+void *producer(void *arg) {
+    int item;
+    while (produced_count < MAX_ITEMS) {
+        item = rand() % 100; // Produce an item (random number here)
+        
+        sem_wait(&empty); // Wait for empty slot in buffer
+        sem_wait(&mutex); // Enter critical section
+
+        // Add item to buffer
+        buffer[in] = item;
+        printf("Produced: %d\n", item);
+        in = (in + 1) % BUFFER_SIZE;
+        produced_count++;
+
+        sem_post(&mutex); // Exit critical section
+        sem_post(&full); // Signal that buffer is no longer empty
+
+        sleep(1); // Producer sleep
+    }
+    pthread_exit(NULL);
+}
+
+void *consumer(void *arg) {
+    int item;
+    while (consumed_count < MAX_ITEMS) {
+        sem_wait(&full); // Wait for full slot in buffer
+        sem_wait(&mutex); // Enter critical section
+
+        // Remove item from buffer
+        item = buffer[out];
+        printf("Consumed: %d\n", item);
+        out = (out + 1) % BUFFER_SIZE;
+        consumed_count++;
+
+        sem_post(&mutex); // Exit critical section
+        sem_post(&empty); // Signal that buffer is no longer full
+
+        sleep(2); // Consumer sleep
+    }
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t prod_thread, cons_thread;
+
+    // Initialize semaphores
+    sem_init(&empty, 0, BUFFER_SIZE);
+    sem_init(&full, 0, 0);
+    sem_init(&mutex, 0, 1);
+
+    // Create producer and consumer threads
+    pthread_create(&prod_thread, NULL, producer, NULL);
+    pthread_create(&cons_thread, NULL, consumer, NULL);
+
+    // Join threads
+    pthread_join(prod_thread, NULL);
+    pthread_join(cons_thread, NULL);
+
+    // Destroy semaphores
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    sem_destroy(&mutex);
+
+    printf("All items produced and consumed successfully.\n");
+
+    return 0;
+}
